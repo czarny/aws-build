@@ -24,18 +24,15 @@ phases:
       - "curl https://spine.skytest.io/s/preshorten -H 'x-api-key: 9tNPFuvsW77q1iEfARu4O7jXhqDsJ9qd9yVrSqdi' -H 'Content-Type: application/json' --data '{\"url\": \"https://atmoapps.com\"}' -o /dev/null -s -w \"dns:%{time_namelookup}s connect:%{time_connect}s ssl:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\\n\""
       - "curl https://shortener.spine.highridge-test.atmoapps.net/preshorten -H 'x-api-key: 4stR2T3M918oWt1GQf8R92yFW5MhXyrj5rc1NbLC' -H 'Content-Type: application/json' --data '{\"url\": \"https://atmoapps.com\"}' -o /dev/null -s -w \"dns:%{time_namelookup}s connect:%{time_connect}s ssl:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\\n\""
       - "curl https://shortener.spine.highridge-test.atmoapps.net/preshorten -H 'x-api-key: 4stR2T3M918oWt1GQf8R92yFW5MhXyrj5rc1NbLC' -H 'Content-Type: application/json' --data '{\"url\": \"https://atmoapps.com\"}' -o /dev/null -s -w \"dns:%{time_namelookup}s connect:%{time_connect}s ssl:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\\n\""
-      - echo "Cloning target repo..."
-      - git clone $TARGET_REPO /tmp/target-repo
-      - cd /tmp/target-repo
-      - git checkout $TARGET_BRANCH || git checkout -b $TARGET_BRANCH
-      - git config user.email "codebuild@example.com"
-      - git config user.name "CodeBuild"
-      - echo "Last build executed at $(date +%Y-%m-%dT%H:%M:%S)" > info.txt
-      - git add -A
+      - export OUT_REPO=$CODEBUILD_SRC_DIR_TargetOutput
+      - git -C $OUT_REPO checkout $TARGET_BRANCH
+      - git -C $OUT_REPO remote -v
+      - echo "Last build executed at $(date +%Y-%m-%dT%H:%M:%S)" > $OUT_REPO/info.txt
       - |
-        if git diff --cached --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "Build output from source repo - $(date +%Y-%m-%dT%H:%M:%S)"
-          git push origin $TARGET_BRANCH
+        if [ -n "$(git -C $OUT_REPO status --porcelain)" ]; then
+          git config --global user.email "codebuild@example.com"
+          git config --global user.name "CodeBuild"
+          git -C $OUT_REPO add .
+          git -C $OUT_REPO commit -m "Build $CODEBUILD_BUILD_NUMBER"
+          git -C $OUT_REPO push --set-upstream origin $TARGET_BRANCH
         fi
