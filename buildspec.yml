@@ -19,13 +19,12 @@ phases:
       - cd $CODEBUILD_SRC_DIR_TargetOutput
       - git config user.email "codebuild@example.com"
       - git config user.name "CodeBuild"
-      # Copy build artifacts from source to target repo
-      - cp -r $CODEBUILD_SRC_DIR/dist/* . 2>/dev/null || cp -r $CODEBUILD_SRC_DIR/build/* . 2>/dev/null || echo "Copy source files as fallback" && cp -r $CODEBUILD_SRC_DIR/lib/* .
+      - echo "Last build executed at $(date +%Y-%m-%dT%H:%M:%S)" > info.txt
       - git add -A
       - |
         if git diff --cached --quiet; then
           echo "No changes to commit"
         else
           git commit -m "Build output from source repo - $(date +%Y-%m-%dT%H:%M:%S)"
-          git push $TARGET_REPO_URL HEAD:$TARGET_BRANCH
+          git push origin HEAD:$TARGET_BRANCH
         fi
