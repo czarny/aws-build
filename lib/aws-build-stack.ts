@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as codepipeline_actions from 'aws-cdk-lib/aws-codepipeline-actions';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
 interface AwsBuildStackProps extends cdk.StackProps {
   /** ARN of the CodeStar Connection to GitHub (must be created & confirmed in AWS Console) */
@@ -15,6 +16,8 @@ interface AwsBuildStackProps extends cdk.StackProps {
   targetRepoName: string;
   /** Branch to track (default: main) */
   branch?: string;
+  /** Name of the Secrets Manager secret holding the GitHub PAT */
+  githubTokenSecretName?: string;
 }
 
 export class AwsBuildStack extends cdk.Stack {
@@ -22,30 +25,42 @@ export class AwsBuildStack extends cdk.Stack {
     super(scope, id, props);
 
     const branch = props.branch ?? 'main';
+    const tokenSecretName = props.githubTokenSecretName ?? 'github-pat';
+
+    // Look up existing Secrets Manager secret holding the GitHub PAT
+    const githubTokenSecret = secretsmanager.Secret.fromSecretNameV2(
+      this, 'GitHubToken', tokenSecretName,
+    );
 
     // CodeBuild project
     const buildProject = new codebuild.PipelineProject(this, 'BuildProject', {
       projectName: 'build-and-commit',
       environment: {
-        buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0
+        buildImage: codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_3_0,
       },
       buildSpec: codebuild.BuildSpec.fromSourceFilename('buildspec.yml'),
       environmentVariables: {
-        TARGET_REPO: {
-          value: `https://github.com/${props.githubOwner}/${props.targetRepoName}.git`,
+        GITHUB_OWNER: {
+          value: props.githubOwner,
+        },
+        TARGET_REPO_NAME: {
+          value: props.targetRepoName,
         },
         TARGET_BRANCH: {
           value: branch,
         },
-        CONNECTION_ARN: {
-          value: props.connectionArn,
+        GITHUB_TOKEN: {
+          type: codebuild.BuildEnvironmentVariableType.SECRETS_MANAGER,
+          value: tokenSecretName,
         },
       },
     });
 
+    // Grant CodeBuild read access to the secret
+    githubTokenSecret.grantRead(buildProject);
+
     // Pipeline artifacts
     const sourceOutput = new codepipeline.Artifact('SourceOutput');
-    const targetOutput = new codepipeline.Artifact('TargetOutput');
 
     // Pipeline
     const pipeline = new codepipeline.Pipeline(this, 'Pipeline', {
@@ -63,15 +78,6 @@ export class AwsBuildStack extends cdk.Stack {
               output: sourceOutput,
               triggerOnPush: true,
             }),
-            new codepipeline_actions.CodeStarConnectionsSourceAction({
-              actionName: 'TargetRepo',
-              connectionArn: props.connectionArn,
-              owner: props.githubOwner,
-              repo: props.targetRepoName,
-              branch,
-              output: targetOutput,
-              triggerOnPush: false,
-            }),
           ],
         },
         {
@@ -81,7 +87,6 @@ export class AwsBuildStack extends cdk.Stack {
               actionName: 'BuildAndCommit',
               project: buildProject,
               input: sourceOutput,
-              extraInputs: [targetOutput],
             }),
           ],
         },

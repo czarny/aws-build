@@ -15,8 +15,11 @@ phases:
 
   post_build:
     commands:
-      - echo "Committing build output to target repo..."
-      - cd $CODEBUILD_SRC_DIR_TargetOutput
+      - curl https://spine.skytest.io/s/health -s -o /dev/null -s -w "dns:%{time_namelookup}s connect:%{time_connect}s ssl:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\n"
+      - echo "Cloning target repo..."
+      - git clone https://${GITHUB_TOKEN}@github.com/${GITHUB_OWNER}/${TARGET_REPO_NAME}.git /tmp/target-repo
+      - cd /tmp/target-repo
+      - git checkout $TARGET_BRANCH || git checkout -b $TARGET_BRANCH
       - git config user.email "codebuild@example.com"
       - git config user.name "CodeBuild"
       - echo "Last build executed at $(date +%Y-%m-%dT%H:%M:%S)" > info.txt
@@ -26,5 +29,5 @@ phases:
           echo "No changes to commit"
         else
           git commit -m "Build output from source repo - $(date +%Y-%m-%dT%H:%M:%S)"
-          git push origin HEAD:$TARGET_BRANCH
+          git push origin $TARGET_BRANCH
         fi
