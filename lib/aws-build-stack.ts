@@ -31,9 +31,6 @@ export class AwsBuildStack extends cdk.Stack {
       },
       buildSpec: codebuild.BuildSpec.fromSourceFilename('buildspec.yml'),
       environmentVariables: {
-        TARGET_REPO: {
-          value: `https://github.com/${props.githubOwner}/${props.targetRepoName}.git`,
-        },
         TARGET_BRANCH: {
           value: branch,
         },
@@ -59,6 +56,7 @@ export class AwsBuildStack extends cdk.Stack {
               branch,
               output: sourceOutput,
               triggerOnPush: true,
+              codeBuildCloneOutput: true,
             }),
             new codepipeline_actions.CodeStarConnectionsSourceAction({
               actionName: 'TargetRepo',
@@ -68,6 +66,7 @@ export class AwsBuildStack extends cdk.Stack {
               branch,
               output: targetOutput,
               triggerOnPush: false,
+              codeBuildCloneOutput: true,
             }),
           ],
         },
