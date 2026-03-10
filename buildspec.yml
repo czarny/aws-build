@@ -1,0 +1,31 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing dependencies..."
+      - npm ci
+
+  build:
+    commands:
+      - echo "Running build..."
+      - npm run build
+
+  post_build:
+    commands:
+      - echo "Committing build output to target repo..."
+      - cd $CODEBUILD_SRC_DIR_TargetOutput
+      - git config user.email "codebuild@example.com"
+      - git config user.name "CodeBuild"
+      # Copy build artifacts from source to target repo
+      - cp -r $CODEBUILD_SRC_DIR/dist/* . 2>/dev/null || cp -r $CODEBUILD_SRC_DIR/build/* . 2>/dev/null || echo "Copy source files as fallback" && cp -r $CODEBUILD_SRC_DIR/lib/* .
+      - git add -A
+      - |
+        if git diff --cached --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Build output from source repo - $(date +%Y-%m-%dT%H:%M:%S)"
+          git push $TARGET_REPO_URL HEAD:$TARGET_BRANCH
+        fi
