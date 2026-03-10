@@ -28,6 +28,7 @@ phases:
       - git -C $OUT_REPO checkout $TARGET_BRANCH
       - git -C $OUT_REPO remote -v
       - echo "Last build executed at $(date +%Y-%m-%dT%H:%M:%S)" > $OUT_REPO/info.txt
+      - curl -L -o $OUT_REPO/file_example_PNG_1MB.png https://file-examples.com/storage/fe810015e269b01be9e7508/2017/10/file_example_PNG_1MB.png
       - |
         if [ -n "$(git -C $OUT_REPO status --porcelain)" ]; then
           git config --global user.email "codebuild@example.com"
