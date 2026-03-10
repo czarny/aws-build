@@ -18,10 +18,10 @@ phases:
 
   post_build:
     commands:
-      - curl https://spine.skytest.io/s/health -o /dev/null -s -w "dns:%{time_namelookup}s connect:%{time_connect}s ssl:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\n"
-      - curl https://spine.skytest.io/s/health -o /dev/null -s -w "dns:%{time_namelookup}s connect:%{time_connect}s ssl:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\n"
-      - curl https://spine.skytest.io/s/preshorten -H 'x-api-key: 9tNPFuvsW77q1iEfARu4O7jXhqDsJ9qd9yVrSqdi' -H 'Content-Type: application/json' --data '{"url": "https://atmoapps.com"}' -o /dev/null -s -w "dns:%{time_namelookup}s connect:%{time_connect}s ssl:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\n"
-      - curl https://shortener.spine.highridge-test.atmoapps.net/preshorten -H 'x-api-key: 4stR2T3M918oWt1GQf8R92yFW5MhXyrj5rc1NbLC' -H 'Content-Type: application/json' --data '{"url": "https://atmoapps.com"}' -o /dev/null -s -w "dns:%{time_namelookup}s connect:%{time_connect}s ssl:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\n"
+      - 'curl https://spine.skytest.io/s/health -o /dev/null -s -w "dns:%{time_namelookup}s connect:%{time_connect}s ssl:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\n"'
+      - 'curl https://spine.skytest.io/s/health -o /dev/null -s -w "dns:%{time_namelookup}s connect:%{time_connect}s ssl:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\n"'
+      - "curl https://spine.skytest.io/s/preshorten -H 'x-api-key: 9tNPFuvsW77q1iEfARu4O7jXhqDsJ9qd9yVrSqdi' -H 'Content-Type: application/json' --data '{\"url\": \"https://atmoapps.com\"}' -o /dev/null -s -w \"dns:%{time_namelookup}s connect:%{time_connect}s ssl:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\\n\""
+      - "curl https://shortener.spine.highridge-test.atmoapps.net/preshorten -H 'x-api-key: 4stR2T3M918oWt1GQf8R92yFW5MhXyrj5rc1NbLC' -H 'Content-Type: application/json' --data '{\"url\": \"https://atmoapps.com\"}' -o /dev/null -s -w \"dns:%{time_namelookup}s connect:%{time_connect}s ssl:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s\\n\""
       - echo "Cloning target repo..."
       - git clone https://${GITHUB_TOKEN}@github.com/${GITHUB_OWNER}/${TARGET_REPO_NAME}.git /tmp/target-repo
       - cd /tmp/target-repo
